@@ -1,0 +1,57 @@
+# ─── Переменные окружения и секреты ───
+.env
+.env.*
+!.env.example
+!config.example.json
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# ─── Виртуальное окружение ───
+.venv/
+venv/
+env/
+ENV/
+
+# ─── pytest ───
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ─── mypy / ruff / linters ───
+.mypy_cache/
+.ruff_cache/
+
+# ─── IDE ───
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# ─── Docker ───
+docker-compose.override.yml
+
+# ─── Alembic (генерируется автоматически) ───
+# versions/ не игнорируем — миграции нужны в git
+
+# ─── Логи ───
+*.log
+logs/

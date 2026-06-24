@@ -1,0 +1,40 @@
+services:
+
+  api:
+    build: .                        # Собирает образ из твоего Dockerfile
+    ports:
+      - "8000:8000"                 # Наружу торчит только этот порт
+    env_file:
+      - .env                        # Все секреты (ключи, пароли) — в .env файле
+    depends_on:
+      - ds2api                      # Стартует только после ds2api
+    restart: unless-stopped
+
+  ds2api:
+    image: ghcr.io/cjackhwang/ds2api:latest
+    environment:
+      - DS2API_ADMIN_KEY=${DS2API_ADMIN_KEY}
+      - DS2API_CONFIG_JSON=${DS2API_CONFIG_JSON}
+    restart: unless-stopped
+
+
+
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_DB: ai_chat
+  #     POSTGRES_USER: app
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+  # redis:
+  #   image: redis:7-alpine
+  #   volumes:
+  #     - redisdata:/data
+  #   restart: unless-stopped
+
+# volumes:
+#   pgdata:
+#   redisdata:
