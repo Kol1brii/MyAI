@@ -1,0 +1,79 @@
+@import "tailwindcss";
+@import "tailwindcss/utilities";
+@plugin "@tailwindcss/typography";
+
+/* ─── Design tokens ─────────────────────────────────────────────── */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --color-canvas:  rgb(20,  21,  26);
+  --color-surface: rgb(29,  31,  39);
+  --color-heading: rgb(244, 244, 242);
+  --color-subtle:  rgb(98,  102, 114);
+  --color-text:    rgb(175, 179, 191);
+  --color-accent:  rgb(38,  203, 124);
+  --color-icon:    rgb(138, 143, 160);
+}
+
+/* ─── Base reset ─────────────────────────────────────────────────── */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(38, 203, 124, 0.25);
+  color: var(--color-heading);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────── */
+*::-webkit-scrollbar        { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track  { background: transparent; }
+*::-webkit-scrollbar-thumb  {
+  background: rgba(98, 102, 114, 0.5);
+  border-radius: 99px;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--color-icon); }
+
+/* ─── Textarea placeholder ───────────────────────────────────────── */
+textarea::placeholder { color: var(--color-subtle); opacity: 1; }
+
+/* ─── Message entrance animation ────────────────────────────────── */
+@keyframes msgIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Landing entrance ───────────────────────────────────────────── */
+@keyframes landingIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Prose-ai: markdown inside bot bubbles ─────────────────────── */
+.prose-ai {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.prose-ai p        { margin-bottom: 0.65em; }
+.prose-ai p:last-child { margin-bottom: 0; }

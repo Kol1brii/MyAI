@@ -76,7 +76,7 @@ copy .env-example .env  # Windows
 docker compose up --build
 ```
 
-- ~~The API will be available at: http://localhost:8000~~
-- ~~Interactive Swagger docs: http://localhost:8000/docs~~
+- The API will be available at: http://localhost:8000
+- Interactive Swagger docs: http://localhost:8000/docs
 - API ds2api will be available at: http://172.19.0.2:5001/ 
-- ~~ReDoc: http://localhost:8000/redoc~~
+- ReDoc: http://localhost:8000/redoc
