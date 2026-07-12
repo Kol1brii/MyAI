@@ -68,6 +68,22 @@ textarea::placeholder { color: var(--color-subtle); opacity: 1; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Dropdown entrance ──────────────────────────────────────────── */
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown-in {
+  animation: dropdownIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ─── Prose-ai: markdown inside bot bubbles ─────────────────────── */
 .prose-ai {
   font-size: 0.875rem;

@@ -1,28 +1,25 @@
-import { AlertCircle, X } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 
 interface Props {
   message: string;
-  onDismiss: () => void;
+  onDismiss?: () => void;
 }
 
-export function ErrorBanner({ message, onDismiss }: Props) {
+export function ErrorBanner({ message }: Props) {
   return (
-    <div
-      className="flex items-start gap-3 rounded-xl px-4 py-3 text-sm mx-auto max-w-2xl"
-      style={{
-        background: 'rgba(255, 80, 80, 0.08)',
-        border: '1px solid rgba(255, 80, 80, 0.25)',
-        color: 'rgb(255, 130, 110)',
-        animation: 'msgIn 0.2s ease-out both',
-      }}
-    >
-      <AlertCircle size={16} className="mt-0.5 shrink-0" />
-      <span className="flex-1 leading-snug">{message}</span>
-      <button
-        onClick={onDismiss}
-        className="shrink-0 mt-0.5 opacity-60 hover:opacity-100 transition-opacity"
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-red-500/10 border border-red-500/20 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/20 text-red-500">
+          !
+        </div>
+        <p className="text-sm font-medium text-red-400">{message}</p>
+      </div>
+      <button 
+        onClick={() => window.location.reload()}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500/20 text-red-500 text-xs font-semibold hover:bg-red-500/30 transition-colors"
       >
-        <X size={14} />
+        <RotateCcw size={12} />
+        Retry
       </button>
     </div>
   );

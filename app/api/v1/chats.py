@@ -7,4 +7,4 @@ ai = AIService()
 @router.get('/{chat_id}')
 async def test():
     result = await ai.test()
-    return
+    return result
