@@ -1,167 +1,237 @@
-import { useEffect, useRef } from 'react';
-import { RotateCcw, Sparkles } from 'lucide-react';
-
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Menu, X, Search, Check, ChevronDown, RotateCcw, Sparkles, Plus } from 'lucide-react';
 import { useChat } from './hooks/useChat';
 import { ChatInput } from './components/ChatInput';
 import { MessageBubble } from './components/MessageBubble';
 import { TypingIndicator } from './components/TypingIndicator';
-import { SuggestionChips } from './components/SuggestionChips';
 import { ErrorBanner } from './components/ErrorBanner';
+import { cn } from './utils/cn';
+
+// Import icons statically to support inlining by viteSingleFile
+import groqIcon from './assets/icons/groq.png';
+import metaLlamaIcon from './assets/icons/meta-llama.png';
+import openaiIcon from './assets/icons/openai.png';
+import qwenIcon from './assets/icons/qwen.png';
+
+const iconMap: Record<string, string> = {
+  'groq': groqIcon,
+  'meta-llama': metaLlamaIcon,
+  'openai': openaiIcon,
+  'qwen': qwenIcon,
+};
 
 export default function App() {
-  const { messages, isLoading, error, sendMessage, reset } = useChat();
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const { 
+    messages, 
+    isLoading, 
+    error, 
+    sendMessage, 
+    reset,
+    models,
+    selectedModel,
+    setSelectedModel
+  } = useChat();
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
+  const [modelSearch, setModelMenuSearch] = useState('');
+
+  const modelMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (modelMenuRef.current && !modelMenuRef.current.contains(event.target as Node)) {
+        setIsModelMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const filteredModels = useMemo(() => {
+    return models.filter(m => 
+      m.name.toLowerCase().includes(modelSearch.toLowerCase()) ||
+      m.provider.toLowerCase().includes(modelSearch.toLowerCase())
+    );
+  }, [models, modelSearch]);
+
   const isInitial = messages.length === 0 && !isLoading;
 
-  const handleSuggestion = (text: string) => {
-    sendMessage(text);
-  };
-
-  // Auto-scroll on new message / typing
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
-
   return (
-    <div
-      className="flex h-full flex-col overflow-hidden"
-      style={{ background: 'var(--color-canvas)' }}
-    >
-      {/* ── Top bar ─────────────────────────────────────────── */}
-      <header
-        className="flex items-center justify-between px-6 h-14 shrink-0 z-20"
-        style={{
-          background: 'rgba(20, 21, 26, 0.8)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: `1px solid ${isInitial ? 'transparent' : 'rgba(98, 102, 114, 0.15)'}`,
-          transition: 'border-color 0.4s ease',
-        }}
-      >
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
-          <div
-            className="flex h-7 w-7 items-center justify-center rounded-lg"
-            style={{
-              background: 'rgba(38, 203, 124, 0.15)',
-              color: 'var(--color-accent)',
-            }}
-          >
-            <Sparkles size={15} />
-          </div>
-          <span
-            className="text-base font-semibold tracking-tight"
-            style={{ color: 'var(--color-heading)', letterSpacing: '-0.02em' }}
-          >
-            MyAI
-          </span>
-        </div>
-
-        {/* New chat button — only when chatting */}
-        {!isInitial && (
-          <button
-            onClick={reset}
-            className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all hover:scale-[1.03] active:scale-95"
-            style={{
-              background: 'var(--color-surface)',
-              color: 'var(--color-icon)',
-              border: '1px solid rgba(98, 102, 114, 0.2)',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--color-heading)';
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(98, 102, 114, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--color-icon)';
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(98, 102, 114, 0.2)';
-            }}
-          >
-            <RotateCcw size={12} />
-            Новый чат
-          </button>
+    <div className="flex h-full w-full overflow-hidden bg-[var(--color-canvas)] text-[var(--color-text)]">
+      
+      {/* ── Sidebar ─────────────────────────────────────────── */}
+      <aside 
+        className={cn(
+          "relative z-50 flex flex-col bg-[var(--color-surface)] border-r border-[rgba(98,102,114,0.15)] transition-all duration-300 ease-in-out",
+          isSidebarOpen ? "w-[240px]" : "w-[68px]"
         )}
-      </header>
+      >
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Menu Toggle & New Chat Row */}
+          <div className="flex flex-col gap-4 p-3.5 border-b border-[rgba(98,102,114,0.1)]">
+             {/* Toggle Button */}
+             <button 
+               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+               className="flex items-center justify-center h-10 w-10 rounded-xl hover:bg-[rgba(98,102,114,0.1)] transition-colors shrink-0"
+             >
+               {isSidebarOpen ? (
+                 <X size={20} className="animate-in fade-in spin-in-90 duration-300" />
+               ) : (
+                 <Menu size={20} className="animate-in fade-in spin-in-negative-90 duration-300" />
+               )}
+             </button>
 
-      {/* ── Messages area ───────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto">
-        {isInitial ? (
-          /* Landing screen */
-          <div
-            className="flex h-full flex-col items-center justify-center px-4 pb-8"
-            style={{ animation: 'landingIn 0.5s ease-out both' }}
-          >
-            {/* Glow orb behind logo */}
-            <div className="relative mb-6">
-              <div
-                className="absolute inset-0 rounded-full blur-2xl opacity-30"
-                style={{ background: 'var(--color-accent)', transform: 'scale(2.5)' }}
+             {/* New Chat Button */}
+             <button 
+               onClick={reset}
+               className={cn(
+                 "flex items-center justify-center gap-2 h-10 rounded-xl border border-[rgba(98,102,114,0.2)] hover:bg-[rgba(38,203,124,0.05)] hover:border-[var(--color-accent)] transition-all overflow-hidden shrink-0",
+                 isSidebarOpen ? "px-4 w-full" : "w-10"
+               )}
+               title="New Chat"
+             >
+               <Plus size={18} className={cn("shrink-0", isSidebarOpen ? "" : "m-0")} />
+               {isSidebarOpen && (
+                 <span className="text-sm font-medium whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-300">
+                   New Chat
+                 </span>
+               )}
+             </button>
+          </div>
+
+          {/* History Area */}
+          <div className="flex-1 overflow-y-auto p-3.5 custom-scrollbar">
+             {isSidebarOpen && (
+               <>
+                 <p className="text-[10px] font-bold text-[var(--color-subtle)] uppercase tracking-[0.1em] mb-4 animate-in fade-in duration-500">History</p>
+                 <div className="text-sm text-[var(--color-subtle)] italic px-1 animate-in fade-in duration-500">No chat history yet</div>
+               </>
+             )}
+          </div>
+        </div>
+      </aside>
+
+      {/* ── Main Content ────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        
+        {/* ── Header ────────────────────────────────────────── */}
+        <header className="flex items-center h-14 px-4 shrink-0 z-30 bg-[rgba(20,21,26,0.8)] backdrop-blur-md border-b border-[rgba(98,102,114,0.15)]">
+          
+          {/* Model Selector */}
+          <div ref={modelMenuRef} className="relative ml-2">
+            <button
+              onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-transparent hover:border-[rgba(98,102,114,0.3)] hover:bg-[rgba(98,102,114,0.05)] transition-all group"
+            >
+              {selectedModel && (
+                <img 
+                  src={iconMap[selectedModel.icon_key]} 
+                  className="w-5 h-5 object-contain opacity-80 group-hover:opacity-100 transition-opacity" 
+                  alt="" 
+                  onError={(e) => (e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(138, 143, 160)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>')}
+                />
+              )}
+              <span className="text-sm font-semibold text-[var(--color-heading)] group-hover:text-white transition-colors">
+                {selectedModel?.name || 'Select Model'}
+              </span>
+              <ChevronDown 
+                size={14} 
+                className={cn("transition-transform duration-200", isModelMenuOpen ? "rotate-180" : "")} 
               />
-              <div
-                className="relative flex h-16 w-16 items-center justify-center rounded-2xl"
-                style={{
-                  background: 'rgba(38, 203, 124, 0.12)',
-                  border: '1px solid rgba(38, 203, 124, 0.25)',
-                  color: 'var(--color-accent)',
-                }}
-              >
-                <Sparkles size={28} />
+            </button>
+
+            {/* Model Dropdown */}
+            {isModelMenuOpen && (
+              <div className="absolute top-full left-0 mt-2 w-72 bg-[var(--color-surface)] border border-[rgba(98,102,114,0.2)] rounded-2xl shadow-2xl overflow-hidden animate-dropdown-in">
+                <div className="p-3 border-b border-[rgba(98,102,114,0.1)]">
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)]" />
+                    <input 
+                      type="text" 
+                      placeholder="Search models..."
+                      value={modelSearch}
+                      onChange={(e) => setModelMenuSearch(e.target.value)}
+                      className="w-full bg-[rgba(20,21,26,0.5)] border border-[rgba(98,102,114,0.2)] rounded-xl py-2 pl-9 pr-4 text-sm outline-none focus:border-[var(--color-accent)] transition-colors"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="max-h-80 overflow-y-auto py-2 custom-scrollbar">
+                  {filteredModels.map(model => {
+                    const isSelected = selectedModel?.id === model.id;
+                    return (
+                      <button
+                        key={model.id}
+                        onClick={() => {
+                          setSelectedModel(model);
+                          setIsModelMenuOpen(false);
+                          setModelMenuSearch('');
+                        }}
+                        className={cn(
+                          "flex items-center justify-between w-full px-4 py-2.5 hover:bg-[rgba(38,203,124,0.08)] transition-colors",
+                          isSelected ? "text-[var(--color-accent)]" : "text-[var(--color-text)]"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                           <img 
+                            src={iconMap[model.icon_key]} 
+                            className="w-5 h-5 object-contain opacity-80" 
+                            alt="" 
+                            onError={(e) => (e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(138, 143, 160)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>')}
+                          />
+                          <span className="text-sm font-medium">{model.name}</span>
+                        </div>
+                        {isSelected && <Check size={14} className="text-[var(--color-accent)]" />}
+                      </button>
+                    );
+                  })}
+                  {filteredModels.length === 0 && (
+                    <div className="px-4 py-8 text-center text-sm text-[var(--color-subtle)]">No models found</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* ── Main Area ─────────────────────────────────────── */}
+        <main className="flex-1 overflow-y-auto relative custom-scrollbar">
+          {isInitial ? (
+            <div className="flex h-full flex-col items-center justify-center px-4 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div className="relative mb-8">
+                <div className="absolute inset-0 rounded-full blur-3xl bg-[var(--color-accent)] opacity-20 scale-150" />
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-[rgba(38,203,124,0.1)] border border-[rgba(38,203,124,0.2)] text-[var(--color-accent)]">
+                  <Sparkles size={36} />
+                </div>
+              </div>
+              <h1 className="text-4xl font-bold mb-3 text-[var(--color-heading)] tracking-tight">How can I help today?</h1>
+              <div className="w-full max-w-2xl mt-8 px-4">
+                <ChatInput onSubmit={sendMessage} isLoading={isLoading} placeholder="Ask anything..." />
               </div>
             </div>
+          ) : (
+            <div className="mx-auto w-full max-w-3xl px-4 py-8 flex flex-col gap-8 pb-32">
+              {messages.map((msg) => (
+                <MessageBubble key={msg.id} message={msg} />
+              ))}
+              {isLoading && <TypingIndicator />}
+              {error && <ErrorBanner message={error} />}
+            </div>
+          )}
+        </main>
 
-            <h1
-              className="text-4xl font-semibold mb-2"
-              style={{ color: 'var(--color-heading)', letterSpacing: '-0.03em' }}
-            >
-              MyAI
-            </h1>
-            <p
-              className="text-base mb-10"
-              style={{ color: 'var(--color-subtle)' }}
-            >
-              Чем я могу помочь сегодня?
-            </p>
-
-            {/* Input */}
-            <div className="w-full max-w-2xl">
-              <ChatInput
-                onSubmit={sendMessage}
-                isLoading={isLoading}
-                placeholder="Спросите что угодно..."
-              />
-              <SuggestionChips onSelect={handleSuggestion} />
+        {/* ── Bottom Input ──────────────────────────────────── */}
+        {!isInitial && (
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-canvas)] via-[var(--color-canvas)] to-transparent pt-12 pointer-events-none">
+            <div className="mx-auto max-w-3xl pointer-events-auto">
+              <ChatInput onSubmit={sendMessage} isLoading={isLoading} placeholder="Ask anything..." />
             </div>
           </div>
-        ) : (
-          /* Chat log */
-          <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-4 flex flex-col gap-7">
-            {messages.map((msg) => (
-              <MessageBubble key={msg.id} message={msg} />
-            ))}
-
-            {isLoading && <TypingIndicator />}
-
-            {error && (
-              <ErrorBanner message={error} onDismiss={() => { /* handled by useChat reset */ }} />
-            )}
-
-            <div ref={bottomRef} />
-          </div>
         )}
-      </main>
-
-      {/* ── Sticky bottom input (chat mode) ─────────────────── */}
-      {!isInitial && (
-        <div
-          className="shrink-0 w-full px-4 pb-5 pt-3"
-          style={{
-            background: `linear-gradient(to top, var(--color-canvas) 60%, transparent)`,
-          }}
-        >
-          <div className="mx-auto max-w-3xl">
-            <ChatInput onSubmit={sendMessage} isLoading={isLoading} />
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

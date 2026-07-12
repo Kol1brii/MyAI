@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Send } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 
 interface Props {
   onSubmit: (text: string) => void;
@@ -9,7 +9,7 @@ interface Props {
 
 const MAX_CHARS = 100_000;
 
-export function ChatInput({ onSubmit, isLoading, placeholder = 'Спросите MyAI о чём угодно...' }: Props) {
+export function ChatInput({ onSubmit, isLoading, placeholder = 'Ask MyAI anything...' }: Props) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [focused, setFocused] = useState(false);
@@ -85,7 +85,7 @@ export function ChatInput({ onSubmit, isLoading, placeholder = 'Спросите
             transform: canSend ? 'scale(1)' : 'scale(0.95)',
           }}
         >
-          <Send size={16} style={{ transform: canSend ? 'translateX(1px)' : 'none' }} />
+          <ArrowUp size={16} />
         </button>
       </div>
 
@@ -100,11 +100,6 @@ export function ChatInput({ onSubmit, isLoading, placeholder = 'Спросите
           {charsLeft.toLocaleString()} / {MAX_CHARS.toLocaleString()}
         </div>
       )}
-
-      {/* Hint */}
-      <p className="mt-2 text-center text-xs" style={{ color: 'var(--color-subtle)' }}>
-        Enter — отправить&nbsp;&nbsp;·&nbsp;&nbsp;Shift + Enter — перенос строки
-      </p>
     </form>
   );
 }

@@ -6,10 +6,9 @@ import os
 class AIService:
     def __init__(self):
         load_dotenv()
-        self.key = os.getenv("AI_API_KEY")
         self.client = AsyncOpenAI(
             base_url=os.getenv("AI_BASE_URL"),
-            api_key=self.key
+            api_key=os.getenv("AI_API_KEY")
         )
         self.history = []
 
@@ -17,14 +16,14 @@ class AIService:
         return {
             "status": "success",
             "message": "Работаем!",
-            "key": self.key
         }
 
-    async def user_response(self, id: uuid.UUID, msg: str):
+    async def user_response(self, id: uuid.UUID, model: str, msg: str):
         response = await self.client.chat.completions.create(
-    model="deepseek-v4-flash",
+    model=model,
             messages=[
                 {"role": "user", "content": msg}
                      ]
     )
-        return response
+        answer_text = response.choices[0].message.content
+        return answer_text
