@@ -37,6 +37,17 @@ services:
       db:
         condition: service_healthy
 
+  scripts:
+    build: .
+    container_name: myai_scripts
+    env_file: .env
+    environment:
+      - PYTHONPATH=/app
+    command: python -m app.scripts.db_seeder
+    depends_on:
+      db:
+        condition: service_healthy
+
   frontend:
     build:
       context: ./frontend
