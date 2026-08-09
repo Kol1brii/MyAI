@@ -56,6 +56,47 @@ ai-chat/
 
 
 ## Getting Started
+
+Этот проект использует API [Groq](https://groq.com/). Для стабильного доступа к сервису из РФ/РБ используется Cloudflare WARP в режиме локального прокси-сервера.
+
+---
+
+### Быстрая настройка WARP (Linux / Ubuntu / Debian)
+
+Выполните эти команды в терминале для установки и настройки прокси.
+
+### 1. Установка Cloudflare WARP
+```bash
+# Добавление ключа репозитория
+curl -fsSL https://cloudflareclient.com | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+
+# Добавление репозитория в систему
+echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://cloudflareclient.com \$(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+
+# Обновление пакетов и установка
+sudo apt update && sudo apt install cloudflare-warp -y
+```
+
+### 2. Запуск фоновой службы
+```bash
+sudo systemctl enable --now warp-svc
+```
+
+### 3. Настройка и подключение proxy
+```bash
+# Регистрация нового клиента в сети
+warp-cli registration new
+
+# Переключение WARP в режим локального прокси
+warp-cli mode proxy
+
+# Назначение порта для SOCKS5/HTTP прокси
+warp-cli proxy port 40000
+
+# Запуск подключения
+warp-cli connect
+```
+
 ### Prerequisites
 - [Docker](https://docs.docker.com/get-docker/) & Docker Compose installed
 - Docker Desktop running (Windows/macOS)
@@ -75,6 +116,7 @@ copy .env-example .env  # Windows
 # Run with Docker
 docker compose up --build
 ```
+### Взаимодействие с проектом осуществляется через эти ссылки:
 
 - Frontend: http://localhost:3000
 - The API will be available at: http://localhost:8000

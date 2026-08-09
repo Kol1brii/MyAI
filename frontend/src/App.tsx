@@ -1,11 +1,12 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Menu, X, Search, Check, ChevronDown, RotateCcw, Sparkles, Plus } from 'lucide-react';
+import { Menu, X, Search, Check, ChevronDown, RotateCcw, Sparkles, Plus, LogOut } from 'lucide-react';
 import { useChat } from './hooks/useChat';
 import { ChatInput } from './components/ChatInput';
 import { MessageBubble } from './components/MessageBubble';
 import { TypingIndicator } from './components/TypingIndicator';
 import { ErrorBanner } from './components/ErrorBanner';
 import { cn } from './utils/cn';
+import { AuthView } from './components/Auth/AuthView';
 
 // Import icons statically to support inlining by viteSingleFile
 import groqIcon from './assets/icons/groq.png';
@@ -21,6 +22,61 @@ const iconMap: Record<string, string> = {
 };
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    console.log("[App] Initialization started");
+    
+    const initAuth = () => {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        const refreshToken = localStorage.getItem('refresh_token');
+        
+        console.log("[App] Tokens in storage:", { 
+          hasAccess: !!accessToken, 
+          hasRefresh: !!refreshToken 
+        });
+
+        if (accessToken) {
+          console.log("[App] Access token found, setting auth to true");
+          setIsAuthenticated(true);
+        } else {
+          console.log("[App] No access token, setting auth to false");
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error("[App] Error during auth initialization:", err);
+        setIsAuthenticated(false);
+      }
+    };
+
+    initAuth();
+
+    const handleAuthSuccess = () => {
+      console.log("[App] Auth success event received");
+      setIsAuthenticated(true);
+    };
+    const handleUnauthorized = () => {
+      console.log("[App] Unauthorized event received");
+      setIsAuthenticated(false);
+    };
+
+    window.addEventListener('auth_success', handleAuthSuccess);
+    window.addEventListener('unauthorized', handleUnauthorized);
+
+    return () => {
+      window.removeEventListener('auth_success', handleAuthSuccess);
+      window.removeEventListener('unauthorized', handleUnauthorized);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    console.log("[App] Logging out...");
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    setIsAuthenticated(false);
+  };
+
   const { 
     messages, 
     isLoading, 
@@ -59,13 +115,27 @@ export default function App() {
 
   const isInitial = messages.length === 0 && !isLoading;
 
+  // 1. LOADING STATE: null
+  if (isAuthenticated === null) {
+    console.log("[App] Rendering LOADING state");
+    return <div className="h-screen w-screen bg-[var(--color-canvas)]" />;
+  }
+
+  // 2. UNAUTHENTICATED STATE: false
+  if (isAuthenticated === false) {
+    console.log("[App] Rendering AUTH state");
+    return <AuthView />;
+  }
+
+  // 3. AUTHENTICATED STATE: true
+  console.log("[App] Rendering CHAT state");
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[var(--color-canvas)] text-[var(--color-text)]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--color-canvas)] text-[var(--color-text)]">
       
       {/* ── Sidebar ─────────────────────────────────────────── */}
       <aside 
         className={cn(
-          "relative z-50 flex flex-col bg-[var(--color-surface)] border-r border-[rgba(98,102,114,0.15)] transition-all duration-300 ease-in-out",
+          "relative z-50 flex flex-col bg-[var(--color-surface)] border-r border-[rgba(98,102,114,0.15)] transition-all duration-300 ease-in-out h-full",
           isSidebarOpen ? "w-[240px]" : "w-[68px]"
         )}
       >
@@ -111,11 +181,30 @@ export default function App() {
                </>
              )}
           </div>
+
+          {/* Logout Button in Sidebar Footer */}
+          <div className="p-3.5 border-t border-[rgba(98,102,114,0.1)]">
+            <button
+              onClick={handleLogout}
+              className={cn(
+                "flex items-center justify-center gap-2 h-10 rounded-xl hover:bg-red-500/10 hover:text-red-400 text-[var(--color-subtle)] transition-all overflow-hidden shrink-0 w-full",
+                isSidebarOpen ? "px-4" : "px-0"
+              )}
+              title="Выйти"
+            >
+              <LogOut size={18} className="shrink-0" />
+              {isSidebarOpen && (
+                <span className="text-sm font-medium whitespace-nowrap animate-in fade-in duration-300">
+                  Выйти
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* ── Main Content ────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      <div className="flex-1 flex flex-col min-w-0 relative h-full">
         
         {/* ── Header ────────────────────────────────────────── */}
         <header className="flex items-center h-14 px-4 shrink-0 z-30 bg-[rgba(20,21,26,0.8)] backdrop-blur-md border-b border-[rgba(98,102,114,0.15)]">
@@ -199,28 +288,30 @@ export default function App() {
 
         {/* ── Main Area ─────────────────────────────────────── */}
         <main className="flex-1 overflow-y-auto relative custom-scrollbar">
-          {isInitial ? (
-            <div className="flex h-full flex-col items-center justify-center px-4 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="relative mb-8">
-                <div className="absolute inset-0 rounded-full blur-3xl bg-[var(--color-accent)] opacity-20 scale-150" />
-                <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-[rgba(38,203,124,0.1)] border border-[rgba(38,203,124,0.2)] text-[var(--color-accent)]">
-                  <Sparkles size={36} />
+          <div className="h-full flex flex-col">
+            {isInitial ? (
+              <div className="flex-1 flex flex-col items-center justify-center px-4 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 rounded-full blur-3xl bg-[var(--color-accent)] opacity-20 scale-150" />
+                  <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-[rgba(38,203,124,0.1)] border border-[rgba(38,203,124,0.2)] text-[var(--color-accent)]">
+                    <Sparkles size={36} />
+                  </div>
+                </div>
+                <h1 className="text-4xl font-bold mb-3 text-[var(--color-heading)] tracking-tight">How can I help today?</h1>
+                <div className="w-full max-w-2xl mt-8 px-4">
+                  <ChatInput onSubmit={sendMessage} isLoading={isLoading} placeholder="Ask anything..." />
                 </div>
               </div>
-              <h1 className="text-4xl font-bold mb-3 text-[var(--color-heading)] tracking-tight">How can I help today?</h1>
-              <div className="w-full max-w-2xl mt-8 px-4">
-                <ChatInput onSubmit={sendMessage} isLoading={isLoading} placeholder="Ask anything..." />
+            ) : (
+              <div className="mx-auto w-full max-w-3xl px-4 py-8 flex flex-col gap-8 pb-32">
+                {messages.map((msg) => (
+                  <MessageBubble key={msg.id} message={msg} />
+                ))}
+                {isLoading && <TypingIndicator />}
+                {error && <ErrorBanner message={error} />}
               </div>
-            </div>
-          ) : (
-            <div className="mx-auto w-full max-w-3xl px-4 py-8 flex flex-col gap-8 pb-32">
-              {messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
-              ))}
-              {isLoading && <TypingIndicator />}
-              {error && <ErrorBanner message={error} />}
-            </div>
-          )}
+            )}
+          </div>
         </main>
 
         {/* ── Bottom Input ──────────────────────────────────── */}

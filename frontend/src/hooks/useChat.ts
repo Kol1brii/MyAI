@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Message, AIModel } from '../types/chat';
-
-const API_URL = 'http://localhost:8000/v1';
+import { api } from '../utils/api';
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -13,14 +12,18 @@ export function useChat() {
   const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/models/`)
-      .then(res => res.json())
-      .then(data => {
+    api.get<AIModel[]>('/models/')
+      .then(({ data }) => {
         setModels(data);
         const defaultModel = data.find((m: AIModel) => m.work_name === 'llama-3.3-70b-versatile') || data[0];
         if (defaultModel) setSelectedModel(defaultModel);
       })
-      .catch(err => console.error('Failed to fetch models', err));
+      .catch(err => {
+        console.error('Failed to fetch models', err);
+        if (err.response?.status === 401) {
+          // api interceptor will dispatch unathorized event
+        }
+      });
   }, []);
 
   const sendMessage = useCallback(
@@ -40,21 +43,11 @@ export function useChat() {
       setIsLoading(true);
 
       try {
-        const response = await fetch(`${API_URL}/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            id: chatId, 
-            msg: text.trim(),
-            model: selectedModel?.work_name || 'llama-3.3-70b-versatile'
-          }),
+        const { data } = await api.post('/', {
+          id: chatId, 
+          msg: text.trim(),
+          model: selectedModel?.work_name || 'llama-3.3-70b-versatile'
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
 
         const botMessage: Message = {
           id: crypto.randomUUID(),
@@ -64,14 +57,18 @@ export function useChat() {
         };
 
         setMessages((prev) => [...prev, botMessage]);
-      } catch (err) {
+      } catch (err: any) {
         console.error('[useChat] fetch error:', err);
+        if (err.response?.status === 401) {
+          // Handled by api interceptor
+          return;
+        }
         setError('Не удалось получить ответ. Убедитесь, что backend запущен на порту 8000.');
       } finally {
         setIsLoading(false);
       }
     },
-    [chatId, isLoading],
+    [chatId, isLoading, selectedModel],
   );
 
   const reset = useCallback(() => {

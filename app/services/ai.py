@@ -18,7 +18,7 @@ class AIService:
             "message": "Работаем!",
         }
 
-    async def user_response(self, id: uuid.UUID, model: str, msg: str):
+    async def user_response(self, model: str, msg: str):
         response = await self.client.chat.completions.create(
     model=model,
             messages=[
