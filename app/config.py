@@ -25,3 +25,8 @@ config.JWT_ACCESS_COOKIE_NAME = "MyAI access token"
 config.JWT_TOKEN_LOCATION = ["headers"]
 config.JWT_COOKIE_CSRF_PROTECT = False
 auth = AuthX(config=config)
+
+# Кастомное исключение для бизнес логики
+class ServiceException(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
