@@ -7,12 +7,16 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey, DateTime, func, Text
 
 
+def generate_uuid7() -> uuid.UUID:
+    # Генератор UUIDv7
+    return uuid.UUID(bytes=uuid_utils.uuid7().bytes)
+
 class Users(Base):
     __tablename__ = "users"
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
+        default=generate_uuid7,
     )
     email: Mapped[str] = mapped_column(nullable=False, index=True, unique=True)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
@@ -32,7 +36,7 @@ class RefreshTokens(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
+        default=generate_uuid7,
     )
     jti: Mapped[str] = mapped_column(nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -53,7 +57,7 @@ class Chats(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
+        default=generate_uuid7,
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
@@ -79,7 +83,7 @@ class Messages(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
+        default=generate_uuid7,
     )
     chat_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("chats.id", ondelete="CASCADE"), nullable=False
