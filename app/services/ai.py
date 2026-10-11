@@ -16,31 +16,6 @@ class AIService:
         )
         self.history = []
 
-    async def test(self):
-        return {
-            "status": "success",
-            "message": "Работаем!",
-        }
-
-    async def chat_history(
-        self,
-        user_id: uuid.UUID,
-        db: AsyncSession,
-        limit: int,
-        before: datetime.datetime | None = None,
-    ):
-        stmt = (
-            select(Chats.id)
-            .where(Chats.user_id == user_id)
-            .order_by(desc(Chats.created_at))
-            .limit(limit)
-        )
-        if before:
-            stmt = stmt.where(Chats.created_at < before)
-
-        raw_result = await db.execute(stmt)
-
-        return raw_result.scalars().all()
 
     async def new_chat(
         self, user_id: uuid.UUID, model: str, msg: str, db: AsyncSession
@@ -63,27 +38,37 @@ class AIService:
             raise ServiceException(message=f"Failed create to chat: {e}")
 
     async def user_response(
-        self, model: str, msg: str, chat_id: uuid.UUID, db: AsyncSession
+            self, model: str, msg: str, chat_id: uuid.UUID, db: AsyncSession
     ):
+        # 1. Достаем последние 20 сообщений этого чата (сортируем desc, чтобы взять самые свежие)
         stmt = (
             select(Messages)
             .where(Messages.chat_id == chat_id)
-            .order_by(Messages.created_at.asc())
+            .order_by(desc(Messages.created_at))
+            .limit(20)
         )
         result = await db.execute(stmt)
-        history = []
-        for i in result.scalars():
-            mes = {"role": i.role, "content": i.content}
-            history.append(mes)
-        message = {"role": "user", "content": msg}
-        history.append(message)
 
+        # 2. Так как мы взяли их с конца, их нужно перевернуть обратно (asc),
+        # чтобы ИИ читал диалог в правильном порядке, а не задом наперед
+        db_messages = list(result.scalars())
+        db_messages.reverse()
+
+        history = []
+        for i in db_messages:
+            history.append({"role": i.role, "content": i.content})
+
+        # 3. Добавляем новое сообщение пользователя в конец контекста
+        history.append({"role": "user", "content": msg})
+
+        # Send to OpenAI
         response = await self.client.chat.completions.create(
             model=model, messages=history
         )
 
         answer_text = response.choices[0].message.content
 
+        # 4. Сохраняем обе реплики в БД
         user_message = Messages(
             id=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
             chat_id=chat_id,
@@ -95,7 +80,7 @@ class AIService:
             id=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
             chat_id=chat_id,
             role="assistant",
-            content=response.choices[0].message.content,
+            content=answer_text,
             model_name=model,
         )
 

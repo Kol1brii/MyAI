@@ -15,7 +15,7 @@ export function useChat() {
     api.get<AIModel[]>('/models/')
       .then(({ data }) => {
         setModels(data);
-        const defaultModel = data.find((m: AIModel) => m.work_name === 'llama-3.3-70b-versatile') || data[0];
+        const defaultModel = data.find((m: AIModel) => m.work_name === 'openai/gpt-oss-20b') || data[0];
         if (defaultModel) setSelectedModel(defaultModel);
       })
       .catch(err => {
@@ -46,7 +46,7 @@ export function useChat() {
         const { data } = await api.post('/', {
           id: chatId, 
           msg: text.trim(),
-          model: selectedModel?.work_name || 'llama-3.3-70b-versatile'
+          model: selectedModel?.work_name || 'openai/gpt-oss-20b'
         });
 
         const botMessage: Message = {
@@ -63,7 +63,7 @@ export function useChat() {
           // Handled by api interceptor
           return;
         }
-        setError('Не удалось получить ответ. Убедитесь, что backend запущен на порту 8000.');
+        setError('Данная модель сейчас недоступна, попробуйте позже');
       } finally {
         setIsLoading(false);
       }

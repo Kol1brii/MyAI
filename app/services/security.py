@@ -24,11 +24,6 @@ def password_validator(v: str) -> bool:
         raise PasswordValidationError("Пароль должен содержать заглавные буквы")
     return True
 
-
-async def protected_messages(user_id: uuid.UUID, chat_id: uuid.UUID, db: AsyncSession):
-    pass
-
-
 async def hash_password(password: str) -> str:
     # Пулл в другой поток так как тяжёлая функция даже для asyncio
     return await asyncio.to_thread(ph.hash, password)
