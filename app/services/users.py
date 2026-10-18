@@ -1,4 +1,7 @@
+import uuid
+import asyncio
 from datetime import datetime, timezone, timedelta
+import uuid_utils
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -11,7 +14,6 @@ from app.services.security import (
     PasswordValidationError
 )
 from app.config import auth
-import uuid_utils
 
 
 class AuthInvalidError(Exception):
@@ -26,7 +28,7 @@ async def registration(email: str, name: str, password: str, db: AsyncSession):
     )
     result = raw_result.scalars().first()
     if result:
-        raise AuthInvalidError(status_code=400, message="Email занят")
+        raise AuthInvalidError(status_code=400, message="Invalid email or password")
 
     try:
         password_validator(v=password)

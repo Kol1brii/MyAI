@@ -1,11 +1,17 @@
+import uuid
+from typing import Optional
+
 from pydantic import BaseModel, Field
+
+from app.db.chats import MODEL_NAME_MAX_LENGTH
 
 
 class NewChatRequest(BaseModel):
-    msg: str = Field(min_length=1, max_length=8000)
-    model: str = Field(min_length=1, max_length=100)
+    id: Optional[uuid.UUID] = None
+    msg: str = Field(min_length=1, max_length=100000)
+    model: str = Field(min_length=1, max_length=MODEL_NAME_MAX_LENGTH)
 
 
 class NewChatResponse(BaseModel):
-    answer: str | None = None
-
+    answer: str
+    chat_id: Optional[uuid.UUID] = None

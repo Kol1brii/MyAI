@@ -29,6 +29,9 @@ venv/
 env/
 ENV/
 
+# ─── Node / фронтенд ───
+node_modules/
+
 # ─── pytest ───
 .pytest_cache/
 .coverage
