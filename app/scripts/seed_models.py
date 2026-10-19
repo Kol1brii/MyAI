@@ -3,6 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import Models
 
 model_list = [
+    {
+    "work_name": "allam-2-7b",
+    "icon_key": "groq",
+    "id": 1,
+    "name": "Allam 2 7B",
+    "provider": "groq"
+  },
   {
     "work_name": "groq/compound",
     "icon_key": "groq",
@@ -29,6 +36,13 @@ model_list = [
     "icon_key": "meta-llama",
     "id": 5,
     "name": "Llama 3.3 70B Versatile",
+    "provider": "meta-llama"
+  },
+  {
+    "work_name": "meta-llama/llama-4-scout-17b-16e-instruct",
+    "icon_key": "meta-llama",
+    "id": 6,
+    "name": "Llama 4 Scout 17B 16E Instruct",
     "provider": "meta-llama"
   },
   {
