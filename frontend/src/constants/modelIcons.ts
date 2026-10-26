@@ -2,12 +2,16 @@ import groqIcon from '../assets/icons/groq.png';
 import metaLlamaIcon from '../assets/icons/meta-llama.png';
 import openaiIcon from '../assets/icons/openai.png';
 import qwenIcon from '../assets/icons/qwen.png';
+import openRouterIcon from '../assets/icons/openrouter.png'
+import nvidiaIcon from '../assets/icons/nvidia.png'
 
 const modelIcons: Record<string, string> = {
   groq: groqIcon,
   'meta-llama': metaLlamaIcon,
   openai: openaiIcon,
   qwen: qwenIcon,
+  openrouter: openRouterIcon,
+  nvidia: nvidiaIcon
 };
 
 export const FALLBACK_ICON =

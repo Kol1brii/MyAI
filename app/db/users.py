@@ -4,15 +4,16 @@ import uuid_utils
 from sqlalchemy.dialects.postgresql import UUID
 from app.db.connection import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, DateTime, func, Text
+from sqlalchemy import String, ForeignKey, DateTime, func
 
 
 class Users(Base):
     __tablename__ = "users"
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
+        default=lambda: uuid.UUID(bytes=uuid_utils.uuid7().bytes),
     )
     email: Mapped[str] = mapped_column(nullable=False, index=True, unique=True)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
@@ -29,10 +30,11 @@ class Users(Base):
 
 class RefreshTokens(Base):
     __tablename__ = "refresh_tokens"
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
+        default=lambda: uuid.UUID(bytes=uuid_utils.uuid7().bytes),
     )
     jti: Mapped[str] = mapped_column(nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -46,49 +48,3 @@ class RefreshTokens(Base):
         DateTime(timezone=True), nullable=False
     )
     user: Mapped["Users"] = relationship(back_populates="refresh_token", lazy="raise")
-
-
-class Chats(Base):
-    __tablename__ = "chats"
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
-    )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    title: Mapped[str] = mapped_column(String(35))
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), index=True, server_default=func.now()
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True),
-        index=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-    model_name: Mapped[str] = mapped_column(String(35))
-    message: Mapped[list["Messages"]] = relationship(
-        back_populates="chat", cascade="all, delete-orphan", lazy="raise"
-    )
-
-
-class Messages(Base):
-    __tablename__ = "messages"
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.UUID(bytes=uuid_utils.uuid7().bytes),
-    )
-    chat_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("chats.id", ondelete="CASCADE"), nullable=False
-    )
-    role: Mapped[str] = mapped_column(String(20))
-    content: Mapped[str] = mapped_column(Text)
-    model_name: Mapped[str] = mapped_column(String(35))
-    # thinking_content: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), index=True, server_default=func.now()
-    )
-    chat: Mapped["Chats"] = relationship(back_populates="message", lazy="raise")
