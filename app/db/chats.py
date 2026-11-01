@@ -10,7 +10,6 @@ from app.db.connection import Base
 
 
 def new_uuid() -> uuid.UUID:
-    """UUIDv7 as a stdlib uuid.UUID (asyncpg expects the stdlib type)."""
     return uuid.UUID(bytes=uuid_utils.uuid7().bytes)
 
 
