@@ -54,3 +54,7 @@ async def new_chat(
     await db.commit()
 
     return NewChatResponse(answer=answer, chat_id=chat.id)
+
+@router.get("/health", status_code=200)
+async def health():
+    return {"success": "ok"}
